@@ -1,5 +1,5 @@
-"use client"
 import "../styles/ProductCard.css"
+import { Link } from "react-router-dom"
 
 const ProductCard = ({ product, onAddToCart, onToggleFavorite, isFavorite }) => {
   const handleAddClick = (e) => {
@@ -23,7 +23,16 @@ const ProductCard = ({ product, onAddToCart, onToggleFavorite, isFavorite }) => 
   return (
     <div className="product-card">
       <div className="product-image-container">
-        <img src={product.image || "/placeholder.svg"} alt={product.name} className="product-image" />
+        {/* Lien vers la page produit */}
+        {/* <Link to={`/product/${product.id}`}>
+          <img src={product.image || "/placeholder.svg"} alt={product.name} className="product-image" />
+        </Link> */}
+        {/* <Link to={`/product/${product.id}`}>
+          <img src={product.image} alt={product.name} className="product-image" />
+      </Link> */}
+      <Link to={`/product/${product.id}`}>
+  <img src={product.image || "/placeholder.svg"} alt={product.name} className="product-image" />
+</Link>
 
         {/* Favorite Button */}
         <button
@@ -72,4 +81,3 @@ const ProductCard = ({ product, onAddToCart, onToggleFavorite, isFavorite }) => 
 }
 
 export default ProductCard
-                                                                                                                                                                                                                                                                                                                                                                                             

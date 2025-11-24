@@ -18,6 +18,7 @@ import AdminDashboard from "./pages/AdminDashboard"
 import OrderConfirmation from "./pages/OrderConfirmation"
 import { PRODUCTS, NOTIFICATIONS } from "./data/products"
 import NotificationPanel from "./components/NotificationPanel"
+import ProductPage from './pages/ProductPage';
 
 function AppContent() {
   const [favorites, setFavorites] = useState([])
@@ -98,6 +99,12 @@ function AppContent() {
               />
             }
           />
+          
+          <Route
+              path="/product/:id"
+              element={<ProductPage onAddToCart={handleAddToCart} />}
+            />
+
           <Route path="/contact" element={<Contact />} />
           <Route
             path="/cart"
