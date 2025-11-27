@@ -21,6 +21,7 @@ import NotificationPanel from "./components/NotificationPanel"
 import ProductPage from "./pages/ProductPage"
 import api from "./api"  // Your axios instance
 
+
 function AppContent() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -29,6 +30,9 @@ function AppContent() {
   const [cart, setCart] = useState([])
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [showFavorites, setShowFavorites] = useState(false)
+  const [favoriteProducts, setFavoriteProducts] = useState([])
 
   // Load cart & favorites & notifications on login
   useEffect(() => {
@@ -42,27 +46,33 @@ function AppContent() {
     }
   }, [user])
 
-  const loadUserData = async () => {
-    try {
-      const [cartRes, favRes, notifRes] = await Promise.all([
-        api.get('/cart'),
-        api.get('/favorites'),
-        api.get('/notifications')
-      ])
-
-      setCart(cartRes.data.items || cartRes.data)
-      setFavorites(favRes.data.map(f => f.product_id || f.id))
-      setNotifications(notifRes.data)
-    } catch (err) {
-      console.error("Failed to load user data", err)
-      if (err.response?.status === 401) {
-        logout()
-        navigate('/auth')
-      }
-    } finally {
-      setLoading(false)
+  // Load favorite products when favorites modal opens
+  useEffect(() => {
+    if (!showFavorites || favorites.length === 0) {
+      setFavoriteProducts([])
+      return
     }
-  }
+
+    const loadFavorites = async () => {
+      try {
+        // Try a single request with ids param if API supports it
+        const res = await api.get('/products', { params: { ids: favorites.join(',') } })
+        setFavoriteProducts(res.data.data || res.data)
+      } catch (err) {
+        // Fallback: fetch individually
+        try {
+          const proms = favorites.map(id => api.get(`/products/${id}`))
+          const results = await Promise.all(proms)
+          setFavoriteProducts(results.map(r => r.data.product || r.data))
+        } catch (err2) {
+          console.error('Failed to load favorite products', err2)
+          setFavoriteProducts([])
+        }
+      }
+    }
+
+    loadFavorites()
+  }, [showFavorites, favorites])
 
   const handleToggleFavorite = async (productId) => {
     try {
@@ -141,8 +151,22 @@ function AppContent() {
         cartCount={cart.reduce((sum, i) => sum + i.quantity, 0)}
         favoritesCount={favorites.length}
         notificationsCount={notifications.filter(n => !n.read).length}
-        onOpenNotifications={() => {}}
+        onOpenNotifications={() => setShowNotifications(true)}
+        onOpenFavorites={() => setShowFavorites(true)}
       />
+      {showNotifications && (
+        <NotificationPanel notifications={notifications} onClose={() => setShowNotifications(false)} />
+      )}
+      {showFavorites && (
+        <FavoritesPage
+          favorites={favorites}
+          products={favoriteProducts}
+          onRemoveFavorite={(id) => setFavorites(prev => prev.filter(i => i !== id))}
+          onAddToCart={(p) => handleAddToCart(p)}
+          onClose={() => setShowFavorites(false)}
+        />
+      )}
+      
       <Categories />
 
       <main className="container">
